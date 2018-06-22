@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>cidja</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="manifest.json">
+    <link rel="shortcut icon" href="favicon.ico">
+<!--
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Elm Quiz">
+-->
+
+    <!-- Add to homescreen for Safari on iOS
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="My App">
+-->
+    <!-- Homescreen icons
+    <link rel="apple-touch-icon" href="images/manifest/icon-48x48.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/manifest/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="images/manifest/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="images/manifest/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="images/manifest/icon-192x192.png">
+-->
+    <!-- Tile icon for Windows 8 (144x144 + tile color)
+    <meta name="msapplication-TileImage" content="images/manifest/icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#3f51b5">
+    <meta name="msapplication-tap-highlight" content="no">
+
+    <link rel="import" href="bower_components/polymer/polymer-element.html">
+    <link rel="import" href="bower_components/paper-spinner/paper-spinner.html">
+
+-->
+
+
+
+
+</head>
+<body>
+<!--
+  Feature detect Custom Elements support. If the browser DOES support Custom
+  Elements then we need to load the custom-elements-es5-adapter because
+  our project code has been transpiled from ES2015 to ES5 and native Custom
+  Elements expect elements will be registered as classes.
+-->
+<div id="ce-es5-shim">
+    <script type="text/javascript">
+      if (!window.customElements) {
+        var ceShimContainer = document.querySelector('#ce-es5-shim');
+        ceShimContainer.parentElement.removeChild(ceShimContainer);
+      }
+    </script>
+    <script type="text/javascript" src="bower_components/webcomponentsjs/custom-elements-es5-adapter.js"></script>
+</div>
+
+<!--
+  Use the webcomponents-loader script which will feature detect which Web
+  Components features are missing and lazy load the appropriate polyfills.
+  When we hear the 'WebComponentsReady' event from the polyfill bundle we can
+  insert our 'bundle.js'.
+-->
+<script>
+  (function() {
+    document.addEventListener('WebComponentsReady', function componentsReady() {
+      document.removeEventListener('WebComponentsReady', componentsReady, false);
+      var script = document.createElement('script');
+      script.src = '<%= htmlWebpackPlugin.files.js[0] %>';
+      var refScript = document.getElementsByTagName('script')[0];
+      refScript.parentNode.insertBefore(script, refScript);
+    }, false);
+  })();
+</script>
+<script src="bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+
+<noscript>
+    You need to enable JavaScript to run this app.
+</noscript>
+<div id="root"></div>
+
+</body>
+</html>
