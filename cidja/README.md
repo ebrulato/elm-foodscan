@@ -8,15 +8,15 @@ Se placer dans le répertoire /cidja et lancer les commandes:
 
 ```sh
 elm-package install
-bower install
 yarn install
-yarn dev:build
+yarn start
 ```
 
-Puis démarrer l'application avec
+Pour déployer sur firebase
 
 ```sh
-yarn dev
+yarn build
+firebase deploy
 ```
 
 
