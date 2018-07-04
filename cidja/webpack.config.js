@@ -70,8 +70,8 @@ module.exports = [
       ]
     },
     plugins: [
-      //{minimize: true, compressor: {warnings: false},
-      new UglifyJsPlugin(sourceMap: devMode, parallel: true, extractComments:true, uglifyOptions:{compress:{side_effects:true}}}),
+      //minimize: true, compressor: {warnings: false},
+      new UglifyJsPlugin({sourceMap: devMode, parallel: true, extractComments:true, uglifyOptions:{compress:{side_effects:true}}}),
       new CopyWebpackPlugin([{
         from: path.resolve(__dirname, 'node_modules/@webcomponents/webcomponentsjs/*.js'),
         to: 'webcomponentsjs/[name].[ext]'
