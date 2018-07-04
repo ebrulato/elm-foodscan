@@ -16,10 +16,15 @@ module.exports = [
   {
     mode: devMode ? 'development' : 'production',
     target: 'web',
-    entry: ['babel-polyfill','./src/index.js'],
+    //entry: ['babel-polyfill','./src/index.js'],
+    entry: {
+      index: ['babel-polyfill', './src/index.js'],
+      components: './src/barcode-scanner.js'
+    },
     output: {
       path: path.resolve('dist'),
-      filename: 'bundle.js'
+    //  filename: 'bundle.js'
+      filename: '[name].bundle.js'
     },
     watch: devMode,
     devServer: {
@@ -65,7 +70,8 @@ module.exports = [
       ]
     },
     plugins: [
-      new UglifyJsPlugin({sourceMap: devMode}),
+      //{minimize: true, compressor: {warnings: false},
+      new UglifyJsPlugin(sourceMap: devMode, parallel: true, extractComments:true, uglifyOptions:{compress:{side_effects:true}}}),
       new CopyWebpackPlugin([{
         from: path.resolve(__dirname, 'node_modules/@webcomponents/webcomponentsjs/*.js'),
         to: 'webcomponentsjs/[name].[ext]'

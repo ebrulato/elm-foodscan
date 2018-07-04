@@ -3,7 +3,7 @@
     ["env", {
       "modules": false,
       "targets": {
-        "browsers": [ ">0.25%", "not op_mini all"]
+        "browsers": [ ">1%", "not op_mini", "not ie", "not dead"]
       }
     }]
   ],
