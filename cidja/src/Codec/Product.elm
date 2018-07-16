@@ -890,20 +890,16 @@ type alias ProductProductLanguages =
 
 type alias ProductProduct =
     { purchase_places_tags : List String
-    , ingredients_ids_debug : List String
     , cities_tags : List String
     , states : String
     , labels_hierarchy : List String
     , ingredients_n : String
     , minerals_prev_tags : List String
-    , ingredients_text_fr_debug_tags : List String
     , informers_tags : List String
     , image_small_url : String
     , pnns_groups_2 : String
     , amino_acids_tags : List String
     , id : String
-    , generic_name_fr_debug_tags : List String
-    , labels_debug_tags : List String
     , id2 : String
     , allergens : String
     , completed_t : Int
@@ -915,7 +911,7 @@ type alias ProductProduct =
     , categories_prev_hierarchy : List String
     , pnns_groups_1 : String
     , nutrition_data_per : String
-    , nutrition_data_prepared_per : String
+    , nutrition_data_prepared_per : Maybe String
     , additives_tags : List String
     , entry_dates_tags : List String
     , additives_prev_n : Int
@@ -923,32 +919,27 @@ type alias ProductProduct =
     , traces_tags : List String
     , countries_hierarchy : List String
     , last_modified_t : Int
-    , product_quantity : Int
+    , product_quantity : Maybe Int
     , brands_tags : List String
     , product_name : String
     , labels_prev_tags : List String
     , nucleotides_prev_tags : List String
-    , expiration_date_debug_tags : List String
-    , countries_debug_tags : List String
-    , link_debug_tags : List String
     , manufacturing_places : String
     , max_imgid : String
     , image_thumb_url : String
     , pnns_groups_1_tags : List String
-    , nutrition_score_debug : String
     , countries : String
     , unique_scans_n : Int
     , ingredients_n_tags : List String
     , no_nutrition_data : String
-    , serving_size_debug_tags : List String
     , languages_hierarchy : List String
     , purchase_places : String
     , additives : String
     , languages_codes : ProductProductLanguages_codes
-    , additives_old_tags : List String
     , traces : String
     , last_image_dates_tags : List String
-    , nutriments : ProductProductNutriments
+
+    --, nutriments : ProductProductNutriments
     , ingredients_from_palm_oil_n : Int
     , misc_tags : List String
     , categories_hierarchy : List String
@@ -960,8 +951,6 @@ type alias ProductProduct =
     , additives_n : Int
     , selected_images : ProductProductSelected_images
     , last_image_t : Int
-    , debug_param_sorted_langs : List String
-    , additives_debug_tags : List String
     , ingredients_from_or_that_may_be_from_palm_oil_n : Int
     , serving_size : String
     , complete : Int
@@ -973,8 +962,6 @@ type alias ProductProduct =
     , packaging : String
     , ingredients_that_may_be_from_palm_oil_n : Int
     , image_ingredients_small_url : String
-    , traces_debug_tags : List String
-    , nutrition_data_per_debug_tags : List String
     , unknown_nutrients_tags : List String
     , emb_codes_orig : String
     , additives_prev_original_tags : List String
@@ -983,7 +970,6 @@ type alias ProductProduct =
     , nucleotides_tags : List String
     , interface_version_created : String
     , creator : String
-    , categories_debug_tags : List String
     , packaging_tags : List String
     , categories_tags : List String
     , scans_n : Int
@@ -996,8 +982,6 @@ type alias ProductProduct =
     , checkers_tags : List String
     , categories_prev_tags : List String
     , new_additives_n : Int
-    , purchase_places_debug_tags : List String
-    , images : ProductProductImages
     , interface_version_modified : String
     , ingredients_tags : List String
     , vitamins_tags : List String
@@ -1010,28 +994,23 @@ type alias ProductProduct =
     , update_key : String
     , image_ingredients_url : String
     , correctors_tags : List String
-    , quantity_debug_tags : List String
-    , serving_quantity : Int
+    , serving_quantity : Float
     , origins_tags : List String
-    , brands_debug_tags : List String
     , code : String
     , last_modified_by : Maybe String
     , quantity : String
     , sortkey : Int
     , editors_tags : List String
-    , lang_debug_tags : List String
     , traces_hierarchy : List String
     , generic_name : String
     , pnns_groups_2_tags : List String
     , categories : String
-    , product_name_fr_debug_tags : List String
     , ingredients_from_palm_oil_tags : List String
     , lc : String
     , image_front_thumb_url : String
     , emb_codes : String
     , expiration_date : String
     , editors : List String
-    , origins_debug_tags : List String
     , image_url : String
     , additives_prev : String
     , last_editor : Maybe String
@@ -1039,37 +1018,46 @@ type alias ProductProduct =
     , origins : String
     , ingredients_hierarchy : List String
     , emb_codes_tags : List String
-    , stores_debug_tags : List String
     , image_front_url : String
     , allergens_hierarchy : List String
-    , packaging_debug_tags : List String
-    , product_name_debug_tags : List String
-    , additives_old_n : Int
-    , manufacturing_places_debug_tags : List String
     , emb_codes_20141016 : String
     , link : String
     , ingredients_text : String
     , vitamins_prev_tags : List String
     , image_front_small_url : String
-    , emb_codes_debug_tags : List String
     , states_tags : List String
     , ingredients_that_may_be_from_palm_oil_tags : List String
     , stores : String
     , image_nutrition_thumb_url : String
     , labels : String
     , additives_original_tags : List String
-    , ingredients_text_debug : String
     , states_hierarchy : List String
     }
 
 
 decodeProduct : Json.Decode.Decoder Product
 decodeProduct =
-    Json.Decode.Pipeline.decode Product
+    let
+        toDecoder : String -> Int -> Maybe Json.Decode.Value -> String -> Json.Decode.Decoder Product
+        toDecoder code status product status_verbose =
+            case product of
+                Nothing ->
+                    Json.Decode.succeed (Product code status Nothing status_verbose)
+
+                Just value ->
+                    case Json.Decode.decodeValue decodeProductProduct value of
+                        Ok p ->
+                            Json.Decode.succeed (Product code status (Just p) status_verbose)
+
+                        Err m ->
+                            Json.Decode.fail m
+    in
+    Json.Decode.Pipeline.decode toDecoder
         |> Json.Decode.Pipeline.required "code" Json.Decode.string
         |> Json.Decode.Pipeline.required "status" Json.Decode.int
-        |> Json.Decode.Pipeline.optional "product" (Json.Decode.maybe decodeProductProduct) Nothing
+        |> Json.Decode.Pipeline.optional "product" (Json.Decode.maybe Json.Decode.value) Nothing
         |> Json.Decode.Pipeline.required "status_verbose" Json.Decode.string
+        |> Json.Decode.Pipeline.resolve
 
 
 decodeProductProductLanguages_codes : Json.Decode.Decoder ProductProductLanguages_codes
@@ -2062,20 +2050,16 @@ decodeProductProduct : Json.Decode.Decoder ProductProduct
 decodeProductProduct =
     Json.Decode.Pipeline.decode ProductProduct
         |> Json.Decode.Pipeline.required "purchase_places_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "ingredients_ids_debug" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "cities_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "states" Json.Decode.string
         |> Json.Decode.Pipeline.required "labels_hierarchy" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "ingredients_n" Json.Decode.string
         |> Json.Decode.Pipeline.required "minerals_prev_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "ingredients_text_fr_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "informers_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "image_small_url" Json.Decode.string
         |> Json.Decode.Pipeline.required "pnns_groups_2" Json.Decode.string
         |> Json.Decode.Pipeline.required "amino_acids_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "id" Json.Decode.string
-        |> Json.Decode.Pipeline.required "generic_name_fr_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "labels_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "_id" Json.Decode.string
         |> Json.Decode.Pipeline.required "allergens" Json.Decode.string
         |> Json.Decode.Pipeline.required "completed_t" Json.Decode.int
@@ -2087,7 +2071,7 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "categories_prev_hierarchy" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "pnns_groups_1" Json.Decode.string
         |> Json.Decode.Pipeline.required "nutrition_data_per" Json.Decode.string
-        |> Json.Decode.Pipeline.required "nutrition_data_prepared_per" Json.Decode.string
+        |> Json.Decode.Pipeline.optional "nutrition_data_prepared_per" (Json.Decode.maybe Json.Decode.string) Nothing
         |> Json.Decode.Pipeline.required "additives_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "entry_dates_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "additives_prev_n" Json.Decode.int
@@ -2095,32 +2079,26 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "traces_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "countries_hierarchy" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "last_modified_t" Json.Decode.int
-        |> Json.Decode.Pipeline.required "product_quantity" Json.Decode.int
+        |> Json.Decode.Pipeline.optional "product_quantity" (Json.Decode.maybe Json.Decode.int) Nothing
         |> Json.Decode.Pipeline.required "brands_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "product_name" Json.Decode.string
         |> Json.Decode.Pipeline.required "labels_prev_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "nucleotides_prev_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "expiration_date_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "countries_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "link_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "manufacturing_places" Json.Decode.string
         |> Json.Decode.Pipeline.required "max_imgid" Json.Decode.string
         |> Json.Decode.Pipeline.required "image_thumb_url" Json.Decode.string
         |> Json.Decode.Pipeline.required "pnns_groups_1_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "nutrition_score_debug" Json.Decode.string
         |> Json.Decode.Pipeline.required "countries" Json.Decode.string
         |> Json.Decode.Pipeline.required "unique_scans_n" Json.Decode.int
         |> Json.Decode.Pipeline.required "ingredients_n_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "no_nutrition_data" Json.Decode.string
-        |> Json.Decode.Pipeline.required "serving_size_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "languages_hierarchy" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "purchase_places" Json.Decode.string
         |> Json.Decode.Pipeline.required "additives" Json.Decode.string
         |> Json.Decode.Pipeline.required "languages_codes" decodeProductProductLanguages_codes
-        |> Json.Decode.Pipeline.required "additives_old_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "traces" Json.Decode.string
         |> Json.Decode.Pipeline.required "last_image_dates_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "nutriments" decodeProductProductNutriments
+        --|> Json.Decode.Pipeline.required "nutriments" decodeProductProductNutriments
         |> Json.Decode.Pipeline.required "ingredients_from_palm_oil_n" Json.Decode.int
         |> Json.Decode.Pipeline.required "misc_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "categories_hierarchy" (Json.Decode.list Json.Decode.string)
@@ -2132,8 +2110,6 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "additives_n" Json.Decode.int
         |> Json.Decode.Pipeline.required "selected_images" decodeProductProductSelected_images
         |> Json.Decode.Pipeline.required "last_image_t" Json.Decode.int
-        |> Json.Decode.Pipeline.required "debug_param_sorted_langs" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "additives_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "ingredients_from_or_that_may_be_from_palm_oil_n" Json.Decode.int
         |> Json.Decode.Pipeline.required "serving_size" Json.Decode.string
         |> Json.Decode.Pipeline.required "complete" Json.Decode.int
@@ -2145,8 +2121,6 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "packaging" Json.Decode.string
         |> Json.Decode.Pipeline.required "ingredients_that_may_be_from_palm_oil_n" Json.Decode.int
         |> Json.Decode.Pipeline.required "image_ingredients_small_url" Json.Decode.string
-        |> Json.Decode.Pipeline.required "traces_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "nutrition_data_per_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "unknown_nutrients_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "emb_codes_orig" Json.Decode.string
         |> Json.Decode.Pipeline.required "additives_prev_original_tags" (Json.Decode.list Json.Decode.string)
@@ -2155,7 +2129,6 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "nucleotides_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "interface_version_created" Json.Decode.string
         |> Json.Decode.Pipeline.required "creator" Json.Decode.string
-        |> Json.Decode.Pipeline.required "categories_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "packaging_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "categories_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "scans_n" Json.Decode.int
@@ -2168,8 +2141,6 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "checkers_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "categories_prev_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "new_additives_n" Json.Decode.int
-        |> Json.Decode.Pipeline.required "purchase_places_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "images" decodeProductProductImages
         |> Json.Decode.Pipeline.required "interface_version_modified" Json.Decode.string
         |> Json.Decode.Pipeline.required "ingredients_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "vitamins_tags" (Json.Decode.list Json.Decode.string)
@@ -2182,28 +2153,23 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "update_key" Json.Decode.string
         |> Json.Decode.Pipeline.required "image_ingredients_url" Json.Decode.string
         |> Json.Decode.Pipeline.required "correctors_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "quantity_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "serving_quantity" Json.Decode.int
+        |> Json.Decode.Pipeline.required "serving_quantity" Json.Decode.float
         |> Json.Decode.Pipeline.required "origins_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "brands_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "code" Json.Decode.string
         |> Json.Decode.Pipeline.required "last_modified_by" (Json.Decode.maybe Json.Decode.string)
         |> Json.Decode.Pipeline.required "quantity" Json.Decode.string
         |> Json.Decode.Pipeline.required "sortkey" Json.Decode.int
         |> Json.Decode.Pipeline.required "editors_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "lang_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "traces_hierarchy" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "generic_name" Json.Decode.string
         |> Json.Decode.Pipeline.required "pnns_groups_2_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "categories" Json.Decode.string
-        |> Json.Decode.Pipeline.required "product_name_fr_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "ingredients_from_palm_oil_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "lc" Json.Decode.string
         |> Json.Decode.Pipeline.required "image_front_thumb_url" Json.Decode.string
         |> Json.Decode.Pipeline.required "emb_codes" Json.Decode.string
         |> Json.Decode.Pipeline.required "expiration_date" Json.Decode.string
         |> Json.Decode.Pipeline.required "editors" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "origins_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "image_url" Json.Decode.string
         |> Json.Decode.Pipeline.required "additives_prev" Json.Decode.string
         |> Json.Decode.Pipeline.required "last_editor" (Json.Decode.maybe Json.Decode.string)
@@ -2211,24 +2177,17 @@ decodeProductProduct =
         |> Json.Decode.Pipeline.required "origins" Json.Decode.string
         |> Json.Decode.Pipeline.required "ingredients_hierarchy" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "emb_codes_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "stores_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "image_front_url" Json.Decode.string
         |> Json.Decode.Pipeline.required "allergens_hierarchy" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "packaging_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "product_name_debug_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "additives_old_n" Json.Decode.int
-        |> Json.Decode.Pipeline.required "manufacturing_places_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "emb_codes_20141016" Json.Decode.string
         |> Json.Decode.Pipeline.required "link" Json.Decode.string
         |> Json.Decode.Pipeline.required "ingredients_text" Json.Decode.string
         |> Json.Decode.Pipeline.required "vitamins_prev_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "image_front_small_url" Json.Decode.string
-        |> Json.Decode.Pipeline.required "emb_codes_debug_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "states_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "ingredients_that_may_be_from_palm_oil_tags" (Json.Decode.list Json.Decode.string)
         |> Json.Decode.Pipeline.required "stores" Json.Decode.string
         |> Json.Decode.Pipeline.required "image_nutrition_thumb_url" Json.Decode.string
         |> Json.Decode.Pipeline.required "labels" Json.Decode.string
         |> Json.Decode.Pipeline.required "additives_original_tags" (Json.Decode.list Json.Decode.string)
-        |> Json.Decode.Pipeline.required "ingredients_text_debug" Json.Decode.string
         |> Json.Decode.Pipeline.required "states_hierarchy" (Json.Decode.list Json.Decode.string)

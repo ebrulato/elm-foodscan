@@ -11,7 +11,3 @@ get code =
         --|> withQueryParams [ ( "apiKey", apiKey ) ]
         --|> withHeader "X-My-Header" "Some Header Value"
         |> withExpect (Http.expectJson decodeProduct)
-
-
-
---Http.get "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=cats" decodeSessionId

@@ -18,8 +18,9 @@ module.exports = [
     target: 'web',
     //entry: ['babel-polyfill','./src/index.js'],
     entry: {
-      index: ['babel-polyfill', './src/index.js'],
-      components: './src/barcode-scanner.js'
+      index: ['babel-polyfill', './src/index.js']
+      , components: './src/barcode-scanner.js'
+      //, sw: './src/sw.js'
     },
     output: {
       path: path.resolve('dist'),
@@ -72,11 +73,14 @@ module.exports = [
     plugins: [
       //minimize: true, compressor: {warnings: false},
       new UglifyJsPlugin({sourceMap: devMode, parallel: true, extractComments:true, uglifyOptions:{compress:{side_effects:true}}}),
-      new CopyWebpackPlugin([{
+      new CopyWebpackPlugin([/*{
         from: path.resolve(__dirname, 'node_modules/@webcomponents/webcomponentsjs/*.js'),
         to: 'webcomponentsjs/[name].[ext]'
-      }, {
+      },*/ {
         from: path.resolve(__dirname, 'src/static')
+      }
+      , {
+        from: path.resolve(__dirname, 'src/sw.js')
       }]),
       new HtmlPlugin({template: 'src/index.html'}),
       new PwaManifestPlugin({
